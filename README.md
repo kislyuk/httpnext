@@ -6,3 +6,4 @@
 # Features
 * early error support
 * chunked i/o, event support
+* asyncio.IncompleReadError.expected is the total expected size, not the remaining size
