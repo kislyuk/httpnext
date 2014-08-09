@@ -1,6 +1,6 @@
 from __future__ import print_function, unicode_literals
 
-from asyncio import get_event_loop, Protocol
+from asyncio import get_event_loop, Protocol, sleep, coroutine
 
 # Should this inherit from both asyncio.protocol and HTTPConnection? (Probably not, but might be OK)
 
@@ -19,9 +19,20 @@ class HTTPConnection(Protocol):
         pass
         #self._conn.close()
 
+    @coroutine
+    def driver(self):
+        while not self._eof_received:
+            print("Waiting...")
+            yield from sleep(1)
+        print("Done")
+
     def request(self, method, url, body=None, headers={}):
+        self._eof_received = False
+        self.response = b""
         self.transport.write("{} {}\n\n".format(method, url).encode())
-        self._loop.run_forever()        
+
+        self._loop.run_until_complete(self.driver())
+        return self.response
 
     def getresponse(self):
         pass
@@ -39,6 +50,7 @@ class HTTPConnection(Protocol):
 
     def eof_received(self):
         print("Received EOF")
+        self._eof_received = True
 
     def pause_writing(self):
         print("Received pause writing cb")
@@ -48,10 +60,12 @@ class HTTPConnection(Protocol):
 
     def data_received(self, data):
         print("Received data:", data)
+        self.response += data
 
 c = HTTPConnection("localhost", 9000)
 c.connect()
-c.request("GET", "/")
+response = c.request("GET", "/")
+print("Got response:", response)
 
 class HTTPResponse(object):
     def __iter__(self):
