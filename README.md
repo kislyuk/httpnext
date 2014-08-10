@@ -5,6 +5,7 @@
 * https://idea.popcount.org/2014-04-03-bind-before-connect/
 
 # Features
-* early error support
-* chunked i/o, event support
+* Early error support ([HTTP/1.1 8.2.3](http://www.w3.org/Protocols/rfc2616/rfc2616-sec8.html#sec8.2.3) `Expect: 100-continue`)
+* Mid-stream error support
+* Chunked i/o, event support
 * asyncio.IncompleReadError.expected is the total expected size, not the remaining size
