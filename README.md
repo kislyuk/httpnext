@@ -1,4 +1,11 @@
-* https://www.ietf.org/rfc/rfc2616.txt
+
+* [RFC7230 - HTTP/1.1: Message Syntax and Routing - low-level message parsing and connection management](http://www.w3.org/Protocols/rfc2730)
+* [RFC7231 - HTTP/1.1: Semantics and Content - methods, status codes and headers](http://www.w3.org/Protocols/rfc2731)
+* [RFC7232 - HTTP/1.1: Conditional Requests - e.g., If-Modified-Since](http://www.w3.org/Protocols/rfc2732)
+* [RFC7233 - HTTP/1.1: Range Requests - getting partial content](http://www.w3.org/Protocols/rfc2733)
+* [RFC7234 - HTTP/1.1: Caching - browser and intermediary caches](http://www.w3.org/Protocols/rfc2734)
+* [RFC7235 - HTTP/1.1: Authentication - a framework for HTTP authentication](http://www.w3.org/Protocols/rfc2735)
+
 * https://github.com/KeepSafe/aiohttp/blob/master/aiohttp/client.py
 * https://github.com/python/cpython/blob/master/Lib/http/client.py
 * https://github.com/joyent/node/blob/master/lib/_http_client.js
