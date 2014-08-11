@@ -29,7 +29,8 @@ class HTTPConnection(Protocol):
     def request(self, method, url, body=None, headers={}, callback=None):
         if method == "POST":
             headers["Expect"] = "100-continue"
-            headers["Content-Length"] = str(len(body))
+#            headers["Content-Length"] = str(len(body))
+            headers["Transfer-Encoding"] = "chunked"
         self._ready_to_send_body, self._eof_received = False, False
         self.body = body
         self.response = b""
@@ -37,6 +38,9 @@ class HTTPConnection(Protocol):
         for header in headers:
             self.transport.write("{}:{}\r\n".format(header, headers[header]).encode())
         self.transport.write(b"\r\n")
+        self._ready_to_send_body = Future()
+        self._loop.run_until_complete(self._ready_to_send_body)
+        self._loop.run_until_complete(self._send_body())
         self._done = Future()
         if callback is None:
             self._loop.run_until_complete(self._done)
@@ -73,13 +77,32 @@ class HTTPConnection(Protocol):
         print("Received data:", data)
         # TODO: fix this up to not be stupid
         if data.startswith(b"HTTP/1.1 100 Continue"):
-            print("Got 100 continue, sending body")
-            self._send_body()
+            print("Got 100 continue, ready to send body")
+            self._ready_to_send_body.set_result(None)
         self.response += data
 
+    @coroutine
     def _send_body(self):
-        self.transport.write(self.body)
-        print("Wrote", len(self.body), "bytes")
+        print("Will send body")
+        from io import BytesIO
+        b = BytesIO(self.body)
+        cs = 1024
+        while True:
+            c = b.read(cs)
+            if c == b"":
+                break
+            yield from sleep(0.1)
+            yield from self._send_chunk(c)
+
+        self.transport.write(b"0\r\n\r\n")
+        print("Done writing body")
+
+    @coroutine
+    def _send_chunk(self, chunk):
+        self.transport.write(bytes("{:x}\r\n".format(len(chunk)), encoding="utf-8"))
+        self.transport.write(chunk)
+        self.transport.write(b"\r\n")
+        print("Wrote", len(chunk), "bytes")
 
 c = HTTPConnection("localhost", 9000)
 c.connect()
