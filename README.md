@@ -18,3 +18,6 @@
 * Chunked i/o, event support
 * Zero-length chunk keepalive
 * asyncio.IncompleReadError.expected is the total expected size, not the remaining size
+* HTTP parsing without establishing a connection
+* Incremental HTTP parsing
+* Raw socket control
