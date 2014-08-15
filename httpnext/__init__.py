@@ -19,13 +19,6 @@ class HTTPConnection(Protocol):
         pass
         #self._conn.close()
 
-#    @coroutine
-#    def driver(self):
-#        while not self._eof_received:
-#            print("Waiting...")
-#            yield from sleep(1)
-#        print("Done")
-
     def request(self, method, url, body=None, headers={}, callback=None):
         if method == "POST":
             headers["Expect"] = "100-continue"
