@@ -1,13 +1,16 @@
 from __future__ import print_function, unicode_literals
 
+import io
 from asyncio import get_event_loop, Protocol, sleep, coroutine, Future
 
 # Should this inherit from both asyncio.protocol and HTTPConnection? (Probably not, but might be OK)
 
-class HTTPConnection(Protocol):
-    def __init__(self, host, port):
+class HTTPConnection(Protocol, io.RawIOBase):
+    def __init__(self, host, port=None, timeout=None, source_address=None):
         self.host = host
-        self.port = port
+        self.port = port if port is not None else 80
+        self.timeout = timeout
+        self.source_address = source_address
         self._loop = get_event_loop()
         self._conn = None
 
@@ -91,7 +94,7 @@ class HTTPConnection(Protocol):
             c = b.read(cs)
             if c == b"":
                 break
-            yield from sleep(0.1)
+            yield from sleep(0)
             yield from self._send_chunk(c)
 
         self.transport.write(b"0\r\n\r\n")
