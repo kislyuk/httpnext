@@ -1,11 +1,14 @@
 from __future__ import print_function, unicode_literals
 
-import io
+import sys, io
 from asyncio import get_event_loop, Protocol, sleep, coroutine, Future
 
-# Should this inherit from both asyncio.protocol and HTTPConnection? (Probably not, but might be OK)
+if sys.version_info >= (3, 4):
+    from .transports import async_http as transport
+else:
+    from .transports import blocking_http as transport
 
-class HTTPConnection(Protocol, io.RawIOBase):
+class HTTPConnection(Protocol):
     def __init__(self, host, port=None, timeout=None, source_address=None):
         self.host = host
         self.port = port if port is not None else 80
@@ -99,11 +102,6 @@ class HTTPConnection(Protocol, io.RawIOBase):
         self.transport.write(chunk)
         self.transport.write(b"\r\n")
         print("Wrote", len(chunk), "bytes")
-
-c = HTTPConnection("localhost", 9000)
-c.connect()
-response = c.request("POST", "/", headers={"foo": "bar", "wat": "wat"}, body=b"0123456789ABCDEF"*1024)
-print("Got response:", response)
 
 class HTTPResponse(object):
     def __iter__(self):
