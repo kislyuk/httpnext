@@ -22,3 +22,4 @@
 * Incremental HTTP parsing
 * Raw socket control
 * backpressure tests
+* Perf regression tests
