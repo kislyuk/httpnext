@@ -23,3 +23,4 @@
 * Raw socket control
 * backpressure tests
 * Perf regression tests
+* Defined extensibility strategy, mixins/plugins
