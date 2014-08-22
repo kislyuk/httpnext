@@ -1,30 +1,47 @@
 from __future__ import print_function, unicode_literals
 
-import sys, io
-import asyncio
-from asyncio import get_event_loop, sleep, coroutine, Future
+import sys, io, socket
+
+HTTP_PORT = 80
+HTTPS_PORT = 443
 
 if sys.version_info >= (3, 4):
     from .transports import async_http as transport
 else:
     from .transports import blocking_http as transport
 
-    close  <bound method HTTPConnection.close of <http.client.HTTPConnection object at 0x1026192e8>>
-    connect  <bound method HTTPConnection.connect of <http.client.HTTPConnection object at 0x1026192e8>>
-    endheaders  <bound method HTTPConnection.endheaders of <http.client.HTTPConnection object at 0x1026192e8>>
-    getresponse  <bound method HTTPConnection.getresponse of <http.client.HTTPConnection object at 0x1026192e8>>
-    putheader  <bound method HTTPConnection.putheader of <http.client.HTTPConnection object at 0x1026192e8>>
-    putrequest  <bound method HTTPConnection.putrequest of <http.client.HTTPConnection object at 0x1026192e8>>
-    request  <bound method HTTPConnection.request of <http.client.HTTPConnection object at 0x1026192e8>>
-    response_class  <class 'http.client.HTTPResponse'>
-    send  <bound method HTTPConnection.send of <http.client.HTTPConnection object at 0x1026192e8>>
-    set_debuglevel  <bound method HTTPConnection.set_debuglevel of <http.client.HTTPConnection object at 0x1026192e8>>
-    set_tunnel  <bound method HTTPConnection.set_tunnel of <http.client.HTTPConnection object at 0x1026192e8>>
+class HTTPResponse(io.RawIOBase):
+    def __iter__(self):
+        # Chunked response iterator
+        pass
+
+    def __enter__(self):
+        pass
+    def __exit__(self):
+        pass
+
+    def read(self, amt=None):
+        pass
+    def readinto(self, b):
+        pass
 
 class _HTTPConnectionInterface(object):
     """
     Provides compatibility with the http.client.HTTPConnection API.
     """
+    response_class = HTTPResponse
+    default_port = HTTP_PORT
+    auto_open = 1
+    debuglevel = 0
+    # TCP Maximum Segment Size (MSS) is determined by the TCP stack on
+    # a per-connection basis.  There is no simple and efficient
+    # platform independent mechanism for determining the MSS, so
+    # instead a reasonable estimate is chosen.  The getsockopt()
+    # interface using the TCP_MAXSEG parameter may be a suitable
+    # approach on some operating systems. A value of 16KiB is chosen
+    # as a reasonable estimate of the maximum MSS.
+    mss = 16384
+
     def __init__(self, *args, **kwargs):
         raise NotImplementedError("Use the HTTPConnection class instead.")
 
@@ -77,46 +94,15 @@ class _HTTPConnectionInterface(object):
     def send(data):
         pass
 
-class _ProtocolInterface(asyncio.Protocol):
-    """
-    Provides compatibility with the http.client.HTTPConnection API.
-    """
-    def __init__(self, *args, **kwargs):
-        raise NotImplementedError("Use the HTTPConnection class instead.")
-
-    def connection_made(self, transport):
-        self.transport = transport
-        print("Connection made:", transport)
-
-    def connection_lost(self, exc):
-        print('server closed the connection')
-        #asyncio.get_event_loop().stop()
-
-    def eof_received(self):
-        print("Received EOF")
-        self._done.set_result(None)
-#        self._eof_received = True
-
-    def pause_writing(self):
-        print("Received pause writing cb")
-
-    def resume_writing(self):
-        print("Received resume writing cb")
-
-    def data_received(self, data):
-        print("Received data:", data)
-        # TODO: fix this up to not be stupid
-        if data.startswith(b"HTTP/1.1 100 Continue"):
-            print("Got 100 continue, ready to send body")
-            self._ready_to_send_body.set_result(None)
-        self.response += data
-
-class HTTPConnection(_HTTPConnectionInterface, _ProtocolInterface):
-    def __init__(self, host, port=None, timeout=None, source_address=None):
+class HTTPConnection(_HTTPConnectionInterface, transport._ProtocolInterface):
+    def __init__(self, host, port=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, source_address=None):
+        # The following 5 fields are part of the http.client.HTTPConnection interface.
         self.host = host
-        self.port = port if port is not None else 80
-        self.timeout = timeout
+        self.port = port if port is not None else HTTP_PORT
         self.source_address = source_address
+        self.sock = None
+        self.timeout = timeout
+
         self._loop = get_event_loop()
         self._conn = None
 
@@ -148,19 +134,4 @@ class HTTPConnection(_HTTPConnectionInterface, _ProtocolInterface):
 
 class HTTPSConnection(HTTPConnection):
     def __init__(self, host, port=None, timeout=None, source_address=None, context=None, check_hostname=None):
-        pass
-
-class HTTPResponse(object):
-    def __iter__(self):
-        # Chunked response iterator
-        pass
-
-    def __enter__(self):
-        pass
-    def __exit__(self):
-        pass
-
-    def read(self, amt=None):
-        pass
-    def readinto(self, b):
         pass
