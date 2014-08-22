@@ -1,31 +1,34 @@
 from __future__ import print_function, unicode_literals
 
 import sys, io
-from asyncio import get_event_loop, Protocol, sleep, coroutine, Future
+import asyncio
+from asyncio import get_event_loop, sleep, coroutine, Future
 
 if sys.version_info >= (3, 4):
     from .transports import async_http as transport
 else:
     from .transports import blocking_http as transport
 
-class HTTPConnection(Protocol):
-    def __init__(self, host, port=None, timeout=None, source_address=None):
-        self.host = host
-        self.port = port if port is not None else 80
-        self.timeout = timeout
-        self.source_address = source_address
-        self._loop = get_event_loop()
-        self._conn = None
+    close  <bound method HTTPConnection.close of <http.client.HTTPConnection object at 0x1026192e8>>
+    connect  <bound method HTTPConnection.connect of <http.client.HTTPConnection object at 0x1026192e8>>
+    endheaders  <bound method HTTPConnection.endheaders of <http.client.HTTPConnection object at 0x1026192e8>>
+    getresponse  <bound method HTTPConnection.getresponse of <http.client.HTTPConnection object at 0x1026192e8>>
+    putheader  <bound method HTTPConnection.putheader of <http.client.HTTPConnection object at 0x1026192e8>>
+    putrequest  <bound method HTTPConnection.putrequest of <http.client.HTTPConnection object at 0x1026192e8>>
+    request  <bound method HTTPConnection.request of <http.client.HTTPConnection object at 0x1026192e8>>
+    response_class  <class 'http.client.HTTPResponse'>
+    send  <bound method HTTPConnection.send of <http.client.HTTPConnection object at 0x1026192e8>>
+    set_debuglevel  <bound method HTTPConnection.set_debuglevel of <http.client.HTTPConnection object at 0x1026192e8>>
+    set_tunnel  <bound method HTTPConnection.set_tunnel of <http.client.HTTPConnection object at 0x1026192e8>>
 
-    def connect(self):
-        self._conn = self._loop.create_connection(lambda: self, self.host, self.port)
-        self._loop.run_until_complete(self._conn)
+class _HTTPConnectionInterface(object):
+    """
+    Provides compatibility with the http.client.HTTPConnection API.
+    """
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError("Use the HTTPConnection class instead.")
 
-    def close(self):
-        pass
-        #self._conn.close()
-
-    def request(self, method, url, body=None, headers={}, callback=None):
+    def request(self, method, url, body=None, headers={}):
         if method == "POST":
             headers["Expect"] = "100-continue"
 #            headers["Content-Length"] = str(len(body))
@@ -41,17 +44,45 @@ class HTTPConnection(Protocol):
         self._loop.run_until_complete(self._ready_to_send_body)
         self._loop.run_until_complete(self._send_body())
         self._done = Future()
-        if callback is None:
-            self._loop.run_until_complete(self._done)
-            return self.response
-        else:
-            pass
+
+        self._loop.run_until_complete(self._done)
+        return self.response
 
     def getresponse(self):
         pass
 
-    def __del__(self):
-        self.close()
+    def set_debuglevel(level):
+        pass
+
+    def set_tunnel(host, port=None, headers=None):
+        pass
+
+    def connect(self):
+        self._conn = self._loop.create_connection(lambda: self, self.host, self.port)
+        self._loop.run_until_complete(self._conn)
+
+    def close(self):
+        pass
+        #self._conn.close()
+
+    def putrequest(request, selector, skip_host=False, skip_accept_encoding=False):
+        pass
+
+    def putheader(header, argument):
+        pass
+
+    def endheaders(message_body=None):
+        pass
+
+    def send(data):
+        pass
+
+class _ProtocolInterface(asyncio.Protocol):
+    """
+    Provides compatibility with the http.client.HTTPConnection API.
+    """
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError("Use the HTTPConnection class instead.")
 
     def connection_made(self, transport):
         self.transport = transport
@@ -80,6 +111,18 @@ class HTTPConnection(Protocol):
             self._ready_to_send_body.set_result(None)
         self.response += data
 
+class HTTPConnection(_HTTPConnectionInterface, _ProtocolInterface):
+    def __init__(self, host, port=None, timeout=None, source_address=None):
+        self.host = host
+        self.port = port if port is not None else 80
+        self.timeout = timeout
+        self.source_address = source_address
+        self._loop = get_event_loop()
+        self._conn = None
+
+    def __del__(self):
+        self.close()
+
     @coroutine
     def _send_body(self):
         print("Will send body")
@@ -102,6 +145,10 @@ class HTTPConnection(Protocol):
         self.transport.write(chunk)
         self.transport.write(b"\r\n")
         print("Wrote", len(chunk), "bytes")
+
+class HTTPSConnection(HTTPConnection):
+    def __init__(self, host, port=None, timeout=None, source_address=None, context=None, check_hostname=None):
+        pass
 
 class HTTPResponse(object):
     def __iter__(self):
