@@ -132,6 +132,9 @@ class HTTPConnection(_HTTPConnectionInterface, transport._ProtocolInterface):
         self.transport.write(b"\r\n")
         print("Wrote", len(chunk), "bytes")
 
+    def on(self, event):
+        pass
+
 class HTTPSConnection(HTTPConnection):
     def __init__(self, host, port=None, timeout=None, source_address=None, context=None, check_hostname=None):
         pass
