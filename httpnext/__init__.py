@@ -33,13 +33,8 @@ class _HTTPConnectionInterface(object):
     default_port = HTTP_PORT
     auto_open = 1
     debuglevel = 0
-    # TCP Maximum Segment Size (MSS) is determined by the TCP stack on
-    # a per-connection basis.  There is no simple and efficient
-    # platform independent mechanism for determining the MSS, so
-    # instead a reasonable estimate is chosen.  The getsockopt()
-    # interface using the TCP_MAXSEG parameter may be a suitable
-    # approach on some operating systems. A value of 16KiB is chosen
-    # as a reasonable estimate of the maximum MSS.
+
+    # Not used.
     mss = 16384
 
     def __init__(self, *args, **kwargs):
@@ -57,12 +52,7 @@ class _HTTPConnectionInterface(object):
         for header in headers:
             self.transport.write("{}:{}\r\n".format(header, headers[header]).encode())
         self.transport.write(b"\r\n")
-        self._ready_to_send_body = Future()
-        self._loop.run_until_complete(self._ready_to_send_body)
-        self._loop.run_until_complete(self._send_body())
-        self._done = Future()
-
-        self._loop.run_until_complete(self._done)
+        self._send_body()
         return self.response
 
     def getresponse(self):
@@ -103,34 +93,10 @@ class HTTPConnection(_HTTPConnectionInterface, transport._ProtocolInterface):
         self.sock = None
         self.timeout = timeout
 
-        self._loop = get_event_loop()
-        self._conn = None
+        transport._ProtocolInterface.__init__(self)
 
     def __del__(self):
         self.close()
-
-    @coroutine
-    def _send_body(self):
-        print("Will send body")
-        from io import BytesIO
-        b = BytesIO(self.body)
-        cs = 1024
-        while True:
-            c = b.read(cs)
-            if c == b"":
-                break
-            yield from sleep(0)
-            yield from self._send_chunk(c)
-
-        self.transport.write(b"0\r\n\r\n")
-        print("Done writing body")
-
-    @coroutine
-    def _send_chunk(self, chunk):
-        self.transport.write(bytes("{:x}\r\n".format(len(chunk)), encoding="utf-8"))
-        self.transport.write(chunk)
-        self.transport.write(b"\r\n")
-        print("Wrote", len(chunk), "bytes")
 
     def on(self, event):
         pass
