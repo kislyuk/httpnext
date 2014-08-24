@@ -11,18 +11,41 @@ else:
     from .transports import blocking_http as transport
 
 class HTTPResponse(io.RawIOBase):
+    def __init__(self):
+        # msg is a http.client.HTTPMessage
+        self.msg = None
+        self.version = None
+        self.status = None
+        self.reason = None
+        self.debuglevel = None
+        self.closed = False
+
+    def read(self, amt=None):
+        pass
+
+    def readinto(self, b):
+        pass
+
+    def getheader(self, name, default=None):
+        pass
+
+    def getheaders(self):
+        pass
+
+    def fileno(self):
+        pass
+
     def __iter__(self):
         # Chunked response iterator
         pass
 
     def __enter__(self):
         pass
+
     def __exit__(self):
         pass
 
-    def read(self, amt=None):
-        pass
-    def readinto(self, b):
+    def on(self, event):
         pass
 
 class _HTTPConnectionInterface(object):
@@ -37,8 +60,12 @@ class _HTTPConnectionInterface(object):
     # Not used.
     mss = 16384
 
-    def __init__(self, *args, **kwargs):
-        raise NotImplementedError("Use the HTTPConnection class instead.")
+    def __init__(self, host, port, timeout, source_address):
+        self.host = host
+        self.port = port if port is not None else HTTP_PORT
+        self.source_address = source_address
+        self.sock = None
+        self.timeout = timeout
 
     def request(self, method, url, body=None, headers={}):
         if method == "POST":
@@ -86,18 +113,13 @@ class _HTTPConnectionInterface(object):
 
 class HTTPConnection(_HTTPConnectionInterface, transport._ProtocolInterface):
     def __init__(self, host, port=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, source_address=None):
-        # The following 5 fields are part of the http.client.HTTPConnection interface.
-        self.host = host
-        self.port = port if port is not None else HTTP_PORT
-        self.source_address = source_address
-        self.sock = None
-        self.timeout = timeout
-
+        _HTTPConnectionInterface.__init__(self, host, port, timeout, source_address)
         transport._ProtocolInterface.__init__(self)
 
     def __del__(self):
         self.close()
 
+    # Is this needed here, or only in HTTPResponse?
     def on(self, event):
         pass
 
