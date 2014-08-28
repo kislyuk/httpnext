@@ -1,3 +1,4 @@
+**Warning: This is a work in progress. It's not ready for general use yet.**
 
 * [RFC7230 - HTTP/1.1: Message Syntax and Routing - low-level message parsing and connection management](http://tools.ietf.org/html/rfc7230)
 * [RFC7231 - HTTP/1.1: Semantics and Content - methods, status codes and headers](http://tools.ietf.org/html/rfc7231)
