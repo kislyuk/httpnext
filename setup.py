@@ -6,9 +6,9 @@ from setuptools import setup, find_packages
 install_requires = [line.rstrip() for line in open(os.path.join(os.path.dirname(__file__), "requirements.txt"))]
 
 setup(
-    name='httpnext',
-    version='0.0.1',
-    url='https://github.com/kislyuk/httpnext',
+    name="httpnext",
+    version="0.0.1",
+    url="https://github.com/kislyuk/httpnext",
     license='Apache Software License',
     author='Andrey Kislyuk',
     author_email='kislyuk@gmail.com',
