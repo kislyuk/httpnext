@@ -72,7 +72,8 @@ class _HTTPConnectionInterface(object):
             headers["Expect"] = "100-continue"
 #            headers["Content-Length"] = str(len(body))
             headers["Transfer-Encoding"] = "chunked"
-        self._ready_to_send_body, self._eof_received = False, False
+        self._ready_to_send_body = False
+        self._eof_received = False
         self.body = body
         self.response = b""
         self.transport.write("{} {} HTTP/1.1\r\n".format(method, url).encode())
