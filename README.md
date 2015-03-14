@@ -1,5 +1,14 @@
 **Warning: This is a work in progress. It's not ready for general use yet.**
 
+```
+conn = httpnext.HTTPConnection("www.python.org")
+conn.request("GET", "/index.html")
+r1 = conn.getresponse()
+print(r1.status, r1.reason)
+while not r1.closed:
+    print(r1.read(200))
+```
+
 * [RFC7230 - HTTP/1.1: Message Syntax and Routing - low-level message parsing and connection management](http://tools.ietf.org/html/rfc7230)
 * [RFC7231 - HTTP/1.1: Semantics and Content - methods, status codes and headers](http://tools.ietf.org/html/rfc7231)
 * [RFC7232 - HTTP/1.1: Conditional Requests - e.g., If-Modified-Since](http://tools.ietf.org/html/rfc7232)

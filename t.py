@@ -25,7 +25,9 @@ class WatClient(asyncio.Protocol):
 
 @asyncio.coroutine
 def h():
-    return requests.get("https://google.com")
+    yield "foo"
+#    return "foo"
+#    return requests.get("https://google.com")
 
 @asyncio.coroutine
 def g(i):
@@ -38,8 +40,18 @@ def f():
     for i in range(10):
         yield from g(i)
 
-loop = asyncio.get_event_loop()
-coro = loop.create_connection(WatClient('GET', '/'), 'localhost', 9000)
-loop.run_until_complete(coro)
-loop.run_forever()
-loop.close()
+#loop = asyncio.get_event_loop()
+#coro = loop.create_connection(WatClient('GET', '/'), 'localhost', 9000)
+#loop.run_until_complete(coro)
+#loop.run_forever()
+#loop.close()
+def f():
+    print("wat")
+    x = yield from h()
+    print(x)
+
+f()
+
+#loop = asyncio.get_event_loop()
+#asyncio.async(test())
+#loop.run_forever()
