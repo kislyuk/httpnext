@@ -14,7 +14,7 @@ setup(
     license='Apache Software License',
     author='Andrey Kislyuk',
     author_email='kislyuk@gmail.com',
-    description='FIXME',
+    description='An experimental HTTP client.',
     long_description=open('README.rst').read(),
     install_requires=install_requires,
     packages = find_packages(exclude=['test']),
