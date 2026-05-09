@@ -1,7 +1,11 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
-import sys, io, socket, time
 import http.client
+import io
+import socket
+import sys
+import time
 
 HTTP_PORT = 80
 HTTPS_PORT = 443
@@ -50,6 +54,7 @@ class HTTPResponse(io.BufferedIOBase):
 
 import asyncio
 
+
 class HTTPConnection(asyncio.Protocol):
     response_class = HTTPResponse
     default_port = HTTP_PORT
@@ -83,7 +88,7 @@ class HTTPConnection(asyncio.Protocol):
         self._headers = headers
         self._body = body
         self._response = HTTPResponse()
-        self._request_future = asyncio.async(self._send_request())
+        self._request_future = asyncio._async(self._send_request())
 
         try:
             asyncio.get_event_loop().run_until_complete(self._request_future)
