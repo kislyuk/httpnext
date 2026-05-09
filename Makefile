@@ -1,23 +1,32 @@
 SHELL=/bin/bash
 
-env: requirements.txt
-	virtualenv --python=python3 env
-	source env/bin/activate; pip3 install --requirement=requirements.txt
+test_deps:
+	python -m pip install .[test]
 
-test: env
-	-pylint -E httpnext
-	source env/bin/activate; ./test/test.py -v
+lint:
+	for dir in $$(dirname */__init__.py); do ruff check $$dir; done
+	for script in scripts/*[^cmd]; do if grep -q python $$script; then ruff check $$script; fi; done
+	mypy --install-types --non-interactive httpnext
 
-release: docs
-	python setup.py sdist upload -s -i D2069255
+test:
+	python ./test/test.py -v
 
 init_docs:
 	cd docs; sphinx-quickstart
 
 docs:
-	$(MAKE) -C docs html
+	python -m pip install furo sphinx-copybutton sphinxext-opengraph
+	sphinx-build docs docs/html
 
-install:
-	./setup.py install
+install: clean
+	python -m pip install build
+	python -m build
+	python -m pip install --upgrade $$(echo dist/*.whl)[test]
 
-.PHONY: test release docs
+clean:
+	-rm -rf build dist
+	-rm -rf *.egg-info
+
+.PHONY: test_deps lint test docs install clean
+
+include common.mk
