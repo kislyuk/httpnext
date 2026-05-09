@@ -9,7 +9,7 @@ install_requires = [line.rstrip() for line in open(os.path.join(os.path.dirname(
 
 setup(
     name="httpnext",
-    version="0.0.1",
+    version="0.0.2",
     url="https://github.com/kislyuk/httpnext",
     license='Apache Software License',
     author='Andrey Kislyuk',
