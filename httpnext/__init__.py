@@ -1,21 +1,24 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import sys, io, socket, time
+import http.client
 
 HTTP_PORT = 80
 HTTPS_PORT = 443
 
-# sys.version_info >= (3, 4)
+class HTTPResponse(io.BufferedIOBase):
+    def __init__(self, debuglevel=0):
+        self.debuglevel = debuglevel
+        self.headers = self.msg = None
 
-class HTTPResponse(): #io.RawIOBase):
-    def __init__(self):
-        # msg is a http.client.HTTPMessage
-        self.msg = None
-        self.version = None
-        self.status = None
-        self.reason = None
-        self.debuglevel = None
-        self.closed = False
+        self.version = http.client._UNKNOWN
+        self.status = http.client._UNKNOWN
+        self.reason = http.client._UNKNOWN
+
+        self.chunked = http.client._UNKNOWN
+        self.chunk_left = http.client._UNKNOWN
+        self.length = http.client._UNKNOWN
+        self.will_close = http.client._UNKNOWN
 
     def read(self, amt=None):
         pass
@@ -71,19 +74,27 @@ class HTTPConnection(asyncio.Protocol):
         print('Connection established to', peername, transport)
         self._transport = transport
 
-    def request(self, method, url, body=None, headers={}):
+    def request(self, method, url, body=None, headers=None):
         self._method = method
         self._url = url
+        if headers is None:
+            headers = {}
 #        headers["Transfer-Encoding"] = "chunked"
         self._headers = headers
         self._body = body
         self._response = HTTPResponse()
-        asyncio.get_event_loop().run_until_complete(self._send_request())
+        self._request_future = asyncio.async(self._send_request())
+
+        try:
+            asyncio.get_event_loop().run_until_complete(self._request_future)
+        except asyncio.CancelledError:
+            print("Got cancellation")
 
     @asyncio.coroutine
     def _send_request(self):
-        self._transport, protocol = yield from asyncio.get_event_loop().create_connection(lambda: self, self.host, self.port)
+        yield from self._connect()
         yield from self._send_head()
+        yield from asyncio.sleep(2)
         yield from self._send_body()
         print("Done sending request")
 
@@ -94,9 +105,6 @@ class HTTPConnection(asyncio.Protocol):
             self._transport.write("{}:{}\r\n".format(header, self._headers[header]).encode())
         self._transport.write(b"\r\n")
         print("Sent head")
-#        self._request_future = asyncio.async(self._send_body())
-
-#        self._event_loop.run_until_complete(self._conn_coroutine)
 
         """
         if method == "POST":
@@ -126,11 +134,13 @@ class HTTPConnection(asyncio.Protocol):
 
     def connection_lost(self, exc):
         print("Connection lost")
+        self._request_future.cancel()
         asyncio.get_event_loop().stop()
 
     def getresponse(self):
         print("In getresponse")
         asyncio.get_event_loop().run_forever()
+        
         return None
 
     def set_debuglevel(level):
@@ -141,8 +151,12 @@ class HTTPConnection(asyncio.Protocol):
 
     def connect(self):
         return
-        self._conn_coroutine = self._event_loop.create_connection(lambda: self, self.host, self.port)
-        self._event_loop.run_until_complete(self._conn_coroutine)
+        if self._transport is None:
+            asyncio.get_event_loop().run_until_complete(self._connect())
+
+    @asyncio.coroutine
+    def _connect(self):
+        self._transport, protocol = yield from asyncio.get_event_loop().create_connection(lambda: self, self.host, self.port)
 
     def close(self):
         pass
@@ -172,4 +186,5 @@ class HTTPConnection(_HTTPConnectionInterface, transport._ProtocolInterface):
 class HTTPSConnection(HTTPConnection):
     def __init__(self, host, port=None, timeout=None, source_address=None, context=None, check_hostname=None):
         pass
+CS169
 """

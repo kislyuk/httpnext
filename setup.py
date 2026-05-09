@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
-import os, glob
-from setuptools import setup, find_packages
+import glob
+import os
+
+from setuptools import find_packages, setup
 
 install_requires = [line.rstrip() for line in open(os.path.join(os.path.dirname(__file__), "requirements.txt"))]
 

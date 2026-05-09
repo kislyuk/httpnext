@@ -23,15 +23,19 @@ while not r1.closed:
 * https://idea.popcount.org/2014-04-03-bind-before-connect/
 
 # Features
+* Performance regression suite
+* Uses system SSL store
 * Early error support ([HTTP/1.1 8.2.3](http://www.w3.org/Protocols/rfc2616/rfc2616-sec8.html#sec8.2.3) `Expect: 100-continue`)
 * Mid-stream error support
 * Chunked i/o, event support
 * Zero-length chunk keepalive
+* Defined extensibility strategy, mixins/plugins
+
+# Under consideration
 * asyncio.IncompleReadError.expected is the total expected size, not the remaining size
 * HTTP parsing without establishing a connection
 * Incremental HTTP parsing
 * Raw socket control
 * backpressure tests
 * Perf regression tests
-* Defined extensibility strategy, mixins/plugins
 * pyOpenSSL integration
